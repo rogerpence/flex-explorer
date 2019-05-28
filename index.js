@@ -3,24 +3,85 @@ let counter = 0;
 
 camelize = function camelize(str) {
     return str.replace(/\W+(.)/g, function(match, chr)
-     {
-          return chr.toUpperCase();
-      });
-  }
+    {
+        return chr.toUpperCase();
+    });
+}
+
+deselectAllChildren = function() {
+    const kids = Array.from(flexRow.children);
+
+    kids.forEach(kid => {
+        kid.classList.remove('selected');
+    });
+}
 
 const actions = {
+    childClicked: function(childId) {
+        const child = document.getElementById(childId);
+        const msg = document.getElementById('selected-child-message');
+        msg.textContent = `Selected child is: ${child.id}`;
+        msg.setAttribute('data-selected-child', child.id);
+
+        if (child.classList.contains('selected')) {
+            deselectAllChildren();
+        }
+        else {
+            deselectAllChildren();
+            child.classList.add('selected');
+        }
+
+
+        if (child.classList.contains('flex-grow')) {
+            document.getElementById('select-flex-grow').value = 'flex-grow';
+        }
+        else if (child.classList.contains('flex-grow-0')) {            
+            document.getElementById('select-flex-grow').value = 'flex-grow-0';
+        } 
+        else {
+            document.getElementById('select-flex-grow').value = '';
+        }
+
+        if (child.classList.contains('flex-shrink')) {
+            document.getElementById('select-flex-shrink').value = 'flex-shrink';
+        }
+        else if (child.classList.contains('flex-shrink-0')) {            
+            document.getElementById('select-flex-shrink').value = 'flex-shrink-0';
+        } 
+        else {
+            document.getElementById('select-flex-shrink').value = '';
+        }
+
+        document.getElementById('select-align-self').value = '';
+        const alignSelfOptions = Array.from(document.getElementById('select-align-self').children);
+        alignSelfOptions.forEach(option => {
+            const value = option.getAttribute('value');
+            if (child.classList.contains(value)) {
+                document.getElementById(`select-align-self`).value = value;
+            }
+        })
+    },
+
     addFlexChild : function() {
-        const text = document.getElementById('child-class-names').value;
         let content = document.getElementById('child-content').value;
+
+        const text = document.getElementById('child-class-names').value;
         const flexGrow = document.getElementById('select-flex-grow').value;
+        const flexShrink = document.getElementById('select-flex-shrink').value;
+        const flexAlignSelf = document.getElementById('select-align-self').value;
         
-        const classNames = 'flex-child ' + ' ' + flexGrow + ' '+ text;
+        const classNames = 'flex-child ' + `${flexGrow} ${flexShrink} ${flexAlignSelf} ${text}`;
     
         if (content == '') {
             content = `id${counter}`;
         }
 
-        const elem = `<div id="id${counter}" class="${classNames}">${content}</div>`;
+        const elem = `
+        <div id="id${counter}" class="${classNames}">        
+        <a href="#" class="" onclick="javascript:actions.childClicked('id${counter}');return false;">
+        ${content}
+        </a>
+        </div>`;
         counter++;
         flexRow.insertAdjacentHTML('beforeend', elem);
     },
@@ -30,14 +91,12 @@ const actions = {
         counter = 0;
     },
 
-    removeLastFlexChild: function() { 
-        if (flexRow.children.length === 0) {
+    removeFlexChild: function() { 
+        const selectedChild = document.querySelector('div.flex-child.selected');
+        if (! selectedChild) {
             return;
-        }      
-        const kids = flexRow.children;
-        console.log(kids);
-        const lastChild = document.getElementById(kids[kids.length - 1].id)
-        flexRow.removeChild(lastChild);
+        }
+        flexRow.removeChild(selectedChild);
     },
 
     selectFlexDirection: function(flexDirection) {
@@ -68,12 +127,16 @@ const actions = {
     selectFlexWrap: function(flexWrap) {
         flexRow.classList.remove('flex-no-wrap', 'flex-wrap', 'flex-wrap-reverse'); 
         flexRow.classList.add(flexWrap);        
-    }
+    },
 
+    copyHtmlToClipboard: function() {
+        console.log(flexRow.parentElement.innerHTML);
+    }
 }
 
-const actionButtons = Array.from(document.querySelectorAll('.action-button'));
 
+
+const actionButtons = Array.from(document.querySelectorAll('.action-button'));
 actionButtons.forEach(button => {
     button.addEventListener('click', (args) => {
         const methodName = camelize(button.id);
@@ -82,15 +145,14 @@ actionButtons.forEach(button => {
     
 })
 
-const actionSelects = Array.from(document.querySelectorAll('.action-select'));
 
+const actionSelects = Array.from(document.querySelectorAll('.action-select'));
 actionSelects.forEach(elem => {
     elem.addEventListener('change', (e) => {
         const methodName = camelize(elem.id);
         console.log(e.target.value);
         actions[methodName](e.target.value);
-    });
-    
+    });    
 })
 
 document.getElementById('select-flex-type').value = 'flex';
@@ -111,4 +173,6 @@ actions.selectAlignContent('content-start');
 document.getElementById('select-flex-wrap').value = 'flex-no-wrap';
 actions.selectFlexWrap('flex-no-wrap');
 
-document.getElementById('select-flex-grow').value = 'none';
+document.getElementById('select-flex-grow').value = '';
+document.getElementById('select-flex-shrink').value = '';
+document.getElementById('select-align-self').value = '';

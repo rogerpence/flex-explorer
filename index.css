@@ -1,4 +1,9 @@
 
 .flex-child {
     border: 1px solid gray;
+    padding: .5rem;
+}
+
+.selected {
+    background-color: darkorange;
 }
